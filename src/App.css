@@ -144,6 +144,37 @@ input[type='text']:focus {
   background: #fecaca;
 }
 
+.btn-calculate {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 16px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+  background: #16a34a;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.btn-calculate:active {
+  background: #15803d;
+}
+
+.stale-note {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  color: #92400e;
+  background: #fef3c7;
+  border-radius: 8px;
+}
+
+.results-body.is-stale {
+  opacity: 0.4;
+}
+
 .results-header {
   display: flex;
   align-items: center;

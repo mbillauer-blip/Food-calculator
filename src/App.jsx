@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import './App.css'
 
 // ---------------------------------------------------------------------------
@@ -351,10 +351,20 @@ export default function App() {
   const [carbs, setCarbs] = useState([])
   const [useLbs, setUseLbs] = useState(false)
 
-  const results = useMemo(
-    () => calculateResults({ adults, kids, appetizers, mains, sides, carbs }),
-    [adults, kids, appetizers, mains, sides, carbs]
+  const buildSnapshot = () => JSON.stringify({ adults, kids, appetizers, mains, sides, carbs })
+
+  const [results, setResults] = useState(() =>
+    calculateResults({ adults, kids, appetizers, mains, sides, carbs })
   )
+  const [calculatedSnapshot, setCalculatedSnapshot] = useState(buildSnapshot)
+
+  const currentSnapshot = buildSnapshot()
+  const isStale = currentSnapshot !== calculatedSnapshot
+
+  const handleCalculate = () => {
+    setResults(calculateResults({ adults, kids, appetizers, mains, sides, carbs }))
+    setCalculatedSnapshot(currentSnapshot)
+  }
 
   const hasAnyItems = appetizers.length + mains.length + sides.length + carbs.length > 0
 
@@ -441,6 +451,10 @@ export default function App() {
         onRemove={removeFrom(setCarbs)}
       />
 
+      <button type="button" className="btn-calculate" onClick={handleCalculate}>
+        {isStale ? 'Recalculate' : 'Calculate'}
+      </button>
+
       <section className="card results">
         <div className="results-header">
           <h2>Results</h2>
@@ -456,9 +470,16 @@ export default function App() {
         </div>
 
         {!hasAnyItems && (
-          <p className="hint">Add some appetizers, mains, sides, or carbs to see totals.</p>
+          <p className="hint">Add some appetizers, mains, sides, or carbs, then hit Calculate.</p>
         )}
 
+        {hasAnyItems && isStale && (
+          <p className="stale-note">
+            Inputs changed since the last calculation — click Recalculate to update these totals.
+          </p>
+        )}
+
+        <div className={`results-body${isStale ? ' is-stale' : ''}`}>
         {appetizers.length > 0 && (
           <>
             <h3>Appetizers</h3>
@@ -519,6 +540,7 @@ export default function App() {
             )}
           </div>
         )}
+        </div>
       </section>
     </div>
   )
