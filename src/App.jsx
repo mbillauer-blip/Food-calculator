@@ -1,7 +1,8 @@
-import { NavLink, Route, Routes } from 'react-router-dom'
+import { Link, NavLink, Route, Routes } from 'react-router-dom'
 import CalculatorPage from './pages/CalculatorPage'
 import BlogIndex from './pages/BlogIndex'
 import BlogPost from './pages/BlogPost'
+import PrivacyPolicy from './pages/PrivacyPolicy'
 import NotFound from './pages/NotFound'
 import './App.css'
 
@@ -27,8 +28,12 @@ export default function App() {
         <Route path="/" element={<CalculatorPage />} />
         <Route path="/blog" element={<BlogIndex />} />
         <Route path="/blog/:slug" element={<BlogPost />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      <footer className="site-footer">
+        <Link to="/privacy">Privacy Policy</Link>
+      </footer>
     </>
   )
 }

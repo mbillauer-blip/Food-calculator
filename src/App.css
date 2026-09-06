@@ -464,3 +464,21 @@ table td:last-child {
 .post-content strong {
   color: #1f2937;
 }
+
+.adsbygoogle {
+  max-width: 640px;
+  margin: 0 auto 16px;
+}
+
+.site-footer {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px;
+  text-align: center;
+}
+
+.site-footer a {
+  color: #9ca3af;
+  font-size: 0.82rem;
+  text-decoration: none;
+}

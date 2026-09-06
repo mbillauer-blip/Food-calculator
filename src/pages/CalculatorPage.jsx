@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import ItemList from '../components/ItemList'
+import AdSlot from '../components/AdSlot'
+import { AD_SLOTS } from '../lib/adsConfig'
 import { useDocumentMeta } from '../hooks/useDocumentMeta'
 import {
   CONFIG,
@@ -215,6 +217,8 @@ export default function CalculatorPage() {
         )}
         </div>
       </section>
+
+      <AdSlot slot={AD_SLOTS.belowCalculatorResults} />
     </div>
   )
 }

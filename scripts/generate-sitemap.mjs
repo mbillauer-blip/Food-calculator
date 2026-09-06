@@ -22,6 +22,7 @@ function parseFrontmatterDate(raw) {
 const staticRoutes = [
   { loc: '/', priority: '1.0' },
   { loc: '/blog', priority: '0.8' },
+  { loc: '/privacy', priority: '0.2' },
 ]
 
 const postFiles = readdirSync(postsDir).filter((f) => f.endsWith('.md'))

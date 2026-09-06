@@ -1,4 +1,6 @@
 import { Link, useParams } from 'react-router-dom'
+import AdSlot from '../components/AdSlot'
+import { AD_SLOTS } from '../lib/adsConfig'
 import { useDocumentMeta } from '../hooks/useDocumentMeta'
 import { getPostBySlug } from '../lib/posts'
 
@@ -38,6 +40,8 @@ export default function BlogPost() {
       </header>
 
       <article className="card post-content" dangerouslySetInnerHTML={{ __html: post.html }} />
+
+      <AdSlot slot={AD_SLOTS.belowBlogPost} />
 
       <p>
         <Link to="/">Try the Party Food Calculator →</Link>

@@ -59,3 +59,29 @@ npm run build
 
 Outputs to `dist/`, including a generated `sitemap.xml` (see
 `scripts/generate-sitemap.mjs`).
+
+## Ads (Google AdSense)
+
+The site is wired up for AdSense but ships with no ads until you configure
+it — `<AdSlot>` renders nothing when unconfigured, so nothing breaks in the
+meantime.
+
+1. Get the site live on GitHub Pages first (see above) — AdSense needs a
+   real URL to review.
+2. Sign up at [adsense.google.com](https://www.google.com/adsense/) and add
+   `https://mbillauer-blip.github.io/Food-calculator/` as your site.
+3. A privacy policy is already in place at `/privacy`
+   (`src/pages/PrivacyPolicy.jsx`) — AdSense requires one before approving a
+   site. Read it over and adjust if your setup changes (e.g. if you add
+   analytics).
+4. Once approved, Google gives you a publisher ID (`ca-pub-...`) and you
+   create individual ad units in their dashboard, each with its own slot ID.
+5. Fill both into `src/lib/adsConfig.js`, and uncomment the AdSense
+   `<script>` tag in `index.html` (replace the placeholder client ID there
+   too).
+6. Commit and push — the two `<AdSlot>` placements (below the calculator
+   results, below each blog post) will start serving ads.
+
+Approval can take anywhere from a day to a few weeks, and AdSense generally
+wants to see a live site with real content (the blog helps here) rather than
+just a bare tool page.
