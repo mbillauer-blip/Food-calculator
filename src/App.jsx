@@ -343,7 +343,7 @@ function ItemList({ label, placeholder, items, onAdd, onRemove }) {
 }
 
 export default function App() {
-  const [adults, setAdults] = useState(10)
+  const [adults, setAdults] = useState(0)
   const [kids, setKids] = useState(0)
   const [appetizers, setAppetizers] = useState([])
   const [mains, setMains] = useState([])
