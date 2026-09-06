@@ -9,9 +9,9 @@ const CONFIG = {
   kidFactor: 0.55,
 
   protein: {
-    // Scales down as more sides/carbs join the table. First matching
+    // Mains scale down as more sides/carbs join the table. First matching
     // maxCount wins, checked in ascending order.
-    gramsPerAdultByItemCount: [
+    mainsGramsPerAdultByItemCount: [
       { maxCount: 1, grams: 200 },
       { maxCount: 3, grams: 150 },
       { maxCount: Infinity, grams: 115 },
@@ -21,6 +21,35 @@ const CONFIG = {
       'thigh', 'drumstick', 'wing', 'rib', 'bone-in', 'bone in',
       'whole chicken', 'whole turkey',
     ],
+    // Premium/special-occasion cuts guests tend to go back for seconds on.
+    specialMultiplier: 1.2,
+    specialKeywords: [
+      'lamb', 'beef', 'steak', 'prime rib', 'filet', 'tenderloin', 'brisket',
+    ],
+    // Lamb ribs are sold and cooked by the rack, not by loose weight.
+    rack: {
+      keywords: [
+        'lamb rib', 'lamb ribs', 'lamb chop', 'lamb chops',
+        'rack of lamb', 'lamb rack',
+      ],
+      ribsPerRack: 6,
+      ribsPerAdultByItemCount: [
+        { maxCount: 1, ribs: 5 },
+        { maxCount: 3, ribs: 4 },
+        { maxCount: Infinity, ribs: 3 },
+      ],
+    },
+  },
+
+  appetizers: {
+    // Scales down as more appetizer varieties are added, same shape as mains.
+    gramsPerAdultByItemCount: [
+      { maxCount: 1, grams: 90 },
+      { maxCount: 3, grams: 70 },
+      { maxCount: Infinity, grams: 50 },
+    ],
+    // Guests graze on apps for hours before mains even arrive.
+    lateNightMultiplier: 1.25,
   },
 
   sides: {
@@ -81,6 +110,38 @@ function isBoneIn(name) {
   return includesAny(name.toLowerCase(), CONFIG.protein.boneInKeywords)
 }
 
+function isSpecial(name) {
+  return includesAny(name.toLowerCase(), CONFIG.protein.specialKeywords)
+}
+
+function isRackItem(name) {
+  return includesAny(name.toLowerCase(), CONFIG.protein.rack.keywords)
+}
+
+// Decides how a protein/appetizer item should be counted: by the rack (lamb
+// ribs), or by weight (everything else), applying the special-cut and
+// late-night-appetizer boosts either way.
+function classifyProtein(name, { isAppetizer, itemCountForTier }) {
+  const lower = name.toLowerCase()
+  const special = isSpecial(lower)
+
+  if (isRackItem(lower)) {
+    let ribsPerAdult = scaleByCount(CONFIG.protein.rack.ribsPerAdultByItemCount, itemCountForTier).ribs
+    if (special) ribsPerAdult *= CONFIG.protein.specialMultiplier
+    if (isAppetizer) ribsPerAdult *= CONFIG.appetizers.lateNightMultiplier
+    return { basis: 'rack', ribsPerAdult, special }
+  }
+
+  const boneIn = isBoneIn(lower)
+  let gramsPerAdult = isAppetizer
+    ? scaleByCount(CONFIG.appetizers.gramsPerAdultByItemCount, itemCountForTier).grams
+    : scaleByCount(CONFIG.protein.mainsGramsPerAdultByItemCount, itemCountForTier).grams
+  if (boneIn) gramsPerAdult *= CONFIG.protein.boneInMultiplier
+  if (special) gramsPerAdult *= CONFIG.protein.specialMultiplier
+  if (isAppetizer) gramsPerAdult *= CONFIG.appetizers.lateNightMultiplier
+  return { basis: 'weight', gramsPerAdult, boneIn, special }
+}
+
 function isUnitBased(name) {
   const lower = name.toLowerCase()
   if (includesAny(lower, CONFIG.nonUnitPhrases)) return false
@@ -120,23 +181,43 @@ function totalUnitsFor(unitsPerAdult, adults, kids) {
   return unitsPerAdult * adults + unitsPerAdult * CONFIG.kidFactor * kids
 }
 
-// Runs the full calculation for every item currently on the lists. Returns
-// per-item results plus grand totals, all in raw grams/units so rounding
-// only happens once, at display time.
-function calculateResults({ adults, kids, proteins, sides, carbs }) {
-  const sideAndCarbCount = sides.length + carbs.length
-  const proteinBaseline = scaleByCount(
-    CONFIG.protein.gramsPerAdultByItemCount,
-    sideAndCarbCount
-  ).grams
+// Builds the display-ready result for one appetizer/main item from its
+// classification (weight-based or rack-based).
+function buildProteinResult(item, classification, adults, kids) {
+  if (classification.basis === 'rack') {
+    const totalRibs = totalUnitsFor(classification.ribsPerAdult, adults, kids)
+    return { ...item, basis: 'rack', totalRibs, special: classification.special }
+  }
+  const totalGrams = totalGramsFor(classification.gramsPerAdult, adults, kids)
+  return {
+    ...item,
+    basis: 'weight',
+    totalGrams,
+    boneIn: classification.boneIn,
+    special: classification.special,
+  }
+}
 
-  const proteinResults = proteins.map((item) => {
-    const boneIn = isBoneIn(item.name)
-    const gramsPerAdult = boneIn
-      ? proteinBaseline * CONFIG.protein.boneInMultiplier
-      : proteinBaseline
-    const totalGrams = totalGramsFor(gramsPerAdult, adults, kids)
-    return { ...item, basis: 'weight', totalGrams, boneIn }
+// Runs the full calculation for every item currently on the lists. Returns
+// per-item results plus grand totals, all in raw grams/units/ribs so
+// rounding only happens once, at display time.
+function calculateResults({ adults, kids, appetizers, mains, sides, carbs }) {
+  const sideAndCarbCount = sides.length + carbs.length
+
+  const mainsResults = mains.map((item) => {
+    const classification = classifyProtein(item.name, {
+      isAppetizer: false,
+      itemCountForTier: sideAndCarbCount,
+    })
+    return buildProteinResult(item, classification, adults, kids)
+  })
+
+  const appetizerResults = appetizers.map((item) => {
+    const classification = classifyProtein(item.name, {
+      isAppetizer: true,
+      itemCountForTier: appetizers.length,
+    })
+    return buildProteinResult(item, classification, adults, kids)
   })
 
   const sideBaseline = scaleByCount(CONFIG.sides.gramsPerAdultByItemCount, sides.length).grams
@@ -161,10 +242,10 @@ function calculateResults({ adults, kids, proteins, sides, carbs }) {
     return { ...item, basis: 'weight', totalGrams }
   })
 
-  const allWeightItems = [...proteinResults, ...sideResults, ...carbResults].filter(
-    (i) => i.basis === 'weight'
-  )
-  const allUnitItems = [...sideResults, ...carbResults].filter((i) => i.basis === 'unit')
+  const allItems = [...appetizerResults, ...mainsResults, ...sideResults, ...carbResults]
+  const allWeightItems = allItems.filter((i) => i.basis === 'weight')
+  const allUnitItems = allItems.filter((i) => i.basis === 'unit')
+  const allRackItems = allItems.filter((i) => i.basis === 'rack')
 
   const grandTotalKg = roundToStep(
     allWeightItems.reduce((sum, i) => sum + i.totalGrams, 0) / 1000,
@@ -174,8 +255,20 @@ function calculateResults({ adults, kids, proteins, sides, carbs }) {
     (sum, i) => sum + Math.ceil(i.totalUnits),
     0
   )
+  const grandTotalRacks = allRackItems.reduce(
+    (sum, i) => sum + Math.ceil(i.totalRibs / CONFIG.protein.rack.ribsPerRack),
+    0
+  )
 
-  return { proteinResults, sideResults, carbResults, grandTotalKg, grandTotalUnits }
+  return {
+    appetizerResults,
+    mainsResults,
+    sideResults,
+    carbResults,
+    grandTotalKg,
+    grandTotalUnits,
+    grandTotalRacks,
+  }
 }
 
 function formatWeight(totalGrams, useLbs) {
@@ -189,6 +282,11 @@ function formatWeight(totalGrams, useLbs) {
 function formatUnits(totalUnits) {
   const units = Math.ceil(totalUnits)
   return `${units} ${units === 1 ? 'piece' : 'pieces'}`
+}
+
+function formatRacks(totalRibs) {
+  const racks = Math.ceil(totalRibs / CONFIG.protein.rack.ribsPerRack)
+  return `${racks} ${racks === 1 ? 'rack' : 'racks'}`
 }
 
 function ItemList({ label, placeholder, items, onAdd, onRemove }) {
@@ -247,17 +345,18 @@ function ItemList({ label, placeholder, items, onAdd, onRemove }) {
 export default function App() {
   const [adults, setAdults] = useState(10)
   const [kids, setKids] = useState(0)
-  const [proteins, setProteins] = useState([])
+  const [appetizers, setAppetizers] = useState([])
+  const [mains, setMains] = useState([])
   const [sides, setSides] = useState([])
   const [carbs, setCarbs] = useState([])
   const [useLbs, setUseLbs] = useState(false)
 
   const results = useMemo(
-    () => calculateResults({ adults, kids, proteins, sides, carbs }),
-    [adults, kids, proteins, sides, carbs]
+    () => calculateResults({ adults, kids, appetizers, mains, sides, carbs }),
+    [adults, kids, appetizers, mains, sides, carbs]
   )
 
-  const hasAnyItems = proteins.length + sides.length + carbs.length > 0
+  const hasAnyItems = appetizers.length + mains.length + sides.length + carbs.length > 0
 
   const addTo = (setter) => (name) => setter((prev) => [...prev, makeItem(name)])
   const removeFrom = (setter) => (id) => setter((prev) => prev.filter((i) => i.id !== id))
@@ -268,11 +367,12 @@ export default function App() {
         <td>
           {item.name}
           {item.boneIn && <span className="tag">bone-in</span>}
+          {item.special && <span className="tag tag-special">premium</span>}
         </td>
         <td>
-          {item.basis === 'weight'
-            ? formatWeight(item.totalGrams, useLbs)
-            : formatUnits(item.totalUnits)}
+          {item.basis === 'weight' && formatWeight(item.totalGrams, useLbs)}
+          {item.basis === 'unit' && formatUnits(item.totalUnits)}
+          {item.basis === 'rack' && formatRacks(item.totalRibs)}
         </td>
       </tr>
     ))
@@ -310,11 +410,19 @@ export default function App() {
       </section>
 
       <ItemList
-        label="Proteins"
+        label="Appetizers"
+        placeholder="e.g. chicken wings"
+        items={appetizers}
+        onAdd={addTo(setAppetizers)}
+        onRemove={removeFrom(setAppetizers)}
+      />
+
+      <ItemList
+        label="Mains"
         placeholder="e.g. chicken thighs"
-        items={proteins}
-        onAdd={addTo(setProteins)}
-        onRemove={removeFrom(setProteins)}
+        items={mains}
+        onAdd={addTo(setMains)}
+        onRemove={removeFrom(setMains)}
       />
 
       <ItemList
@@ -347,13 +455,24 @@ export default function App() {
           </label>
         </div>
 
-        {!hasAnyItems && <p className="hint">Add some proteins, sides, or carbs to see totals.</p>}
+        {!hasAnyItems && (
+          <p className="hint">Add some appetizers, mains, sides, or carbs to see totals.</p>
+        )}
 
-        {proteins.length > 0 && (
+        {appetizers.length > 0 && (
           <>
-            <h3>Proteins</h3>
+            <h3>Appetizers</h3>
             <table>
-              <tbody>{renderRows(results.proteinResults)}</tbody>
+              <tbody>{renderRows(results.appetizerResults)}</tbody>
+            </table>
+          </>
+        )}
+
+        {mains.length > 0 && (
+          <>
+            <h3>Mains</h3>
+            <table>
+              <tbody>{renderRows(results.mainsResults)}</tbody>
             </table>
           </>
         )}
@@ -390,6 +509,12 @@ export default function App() {
               <div>
                 <span className="label">Total pieces</span>
                 <span className="value">{results.grandTotalUnits}</span>
+              </div>
+            )}
+            {results.grandTotalRacks > 0 && (
+              <div>
+                <span className="label">Total racks</span>
+                <span className="value">{results.grandTotalRacks}</span>
               </div>
             )}
           </div>
