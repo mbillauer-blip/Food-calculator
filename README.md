@@ -1,16 +1,61 @@
-# React + Vite
+# Party Food Calculator
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A single-page React app that calculates how much protein, sides, and carbs to
+buy for a party based on guest count and menu. No backend — everything runs
+client-side.
 
-Currently, two official plugins are available:
+## Development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm install
+npm run dev
+```
 
-## React Compiler
+## Project structure
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- `src/lib/foodMath.js` — all portion-sizing config and calculation logic.
+  Baseline gram/unit/rib amounts and keyword lists live in the `CONFIG`
+  object at the top, kept separate from the logic so they're easy to tune.
+- `src/pages/CalculatorPage.jsx` — the calculator UI.
+- `src/pages/BlogIndex.jsx`, `src/pages/BlogPost.jsx` — the blog.
+- `src/content/posts/*.md` — blog posts. Each file needs a frontmatter block:
 
-## Expanding the Oxlint configuration
+  ```md
+  ---
+  title: Post Title
+  description: One-sentence summary, used as the meta description.
+  date: 2026-01-15
+  ---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+  Markdown body here.
+  ```
+
+  Adding a new `.md` file here automatically adds it to the blog index, the
+  `/blog/<filename-without-extension>` route, and `sitemap.xml`.
+
+## Deploying to GitHub Pages
+
+The repo is configured to deploy automatically via GitHub Actions
+(`.github/workflows/deploy.yml`) on every push to the branch it's currently
+tracking. One-time setup on GitHub:
+
+1. Go to **Settings → Pages** on the repo.
+2. Under **Build and deployment → Source**, select **GitHub Actions**.
+
+After that, every push triggers a build and publishes `dist/` (including the
+generated `sitemap.xml` and `robots.txt`) to
+`https://mbillauer-blip.github.io/Food-calculator/`.
+
+If the branch this workflow watches ever changes (e.g. after merging into
+`main`), update the `branches:` list in `.github/workflows/deploy.yml` and the
+`base` path in `vite.config.js` only needs to change if the repo itself is
+renamed.
+
+### Manual build
+
+```bash
+npm run build
+```
+
+Outputs to `dist/`, including a generated `sitemap.xml` (see
+`scripts/generate-sitemap.mjs`).

@@ -1,3 +1,45 @@
+.site-nav {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.site-nav-inner {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.site-nav-brand {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #1f2937;
+  text-decoration: none;
+}
+
+.site-nav-links {
+  display: flex;
+  gap: 16px;
+}
+
+.site-nav-links a {
+  color: #6b7280;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 4px 0;
+  border-bottom: 2px solid transparent;
+}
+
+.site-nav-links a.active {
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+}
+
 .app {
   max-width: 640px;
   margin: 0 auto;
@@ -301,4 +343,124 @@ table td:last-child {
   .btn-add {
     flex: 1;
   }
+}
+
+.eyebrow-link {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+}
+
+.eyebrow-link a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.post-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.post-list-link {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  background: #f9fafb;
+  border: 1px solid #eef0f2;
+  border-radius: 10px;
+  text-decoration: none;
+}
+
+.post-list-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.post-list-description {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.post-list-date {
+  font-size: 0.78rem;
+  color: #9ca3af;
+}
+
+.post-content {
+  line-height: 1.65;
+}
+
+.post-content h2 {
+  font-size: 1.25rem;
+  margin: 24px 0 10px;
+  color: #1f2937;
+}
+
+.post-content h2:first-child {
+  margin-top: 0;
+}
+
+.post-content p {
+  margin: 0 0 14px;
+  color: #374151;
+}
+
+.post-content ul,
+.post-content ol {
+  margin: 0 0 14px;
+  padding-left: 22px;
+  color: #374151;
+}
+
+.post-content li {
+  margin-bottom: 4px;
+}
+
+.post-content code {
+  background: #f3f4f6;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-size: 0.88em;
+}
+
+.post-content pre {
+  background: #111827;
+  color: #f9fafb;
+  padding: 12px 14px;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.post-content pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+
+.post-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 14px;
+}
+
+.post-content th,
+.post-content td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid #eef0f2;
+  font-size: 0.92rem;
+}
+
+.post-content th {
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.post-content strong {
+  color: #1f2937;
 }
